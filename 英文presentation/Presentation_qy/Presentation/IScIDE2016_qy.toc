@@ -1,0 +1,15 @@
+\beamer@endinputifotherversion {3.14pt}
+\select@language {english}
+\beamer@sectionintoc {1}{Motivation}{3}{0}{1}
+\beamer@subsectionintoc {1}{1}{Background}{3}{0}{1}
+\beamer@subsectionintoc {1}{2}{Problem Definition}{4}{0}{1}
+\beamer@sectionintoc {2}{The Proposed Model - MVIR}{5}{0}{2}
+\beamer@subsectionintoc {2}{1}{The Multi-view Model}{5}{0}{2}
+\beamer@subsectionintoc {2}{2}{Objection Function}{9}{0}{2}
+\beamer@subsectionintoc {2}{3}{Model Optimization}{12}{0}{2}
+\beamer@subsectionintoc {2}{4}{Recommend Users to Items.}{14}{0}{2}
+\beamer@sectionintoc {3}{Experiment Results}{20}{0}{3}
+\beamer@subsectionintoc {3}{1}{Dataset \& Evaluation Metrics}{20}{0}{3}
+\beamer@subsectionintoc {3}{2}{Parameters Analysis}{23}{0}{3}
+\beamer@subsectionintoc {3}{3}{Comparison Experiments}{26}{0}{3}
+\beamer@sectionintoc {4}{Conclusion}{30}{0}{4}
