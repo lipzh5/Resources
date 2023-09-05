@@ -1,0 +1,24 @@
+\beamer@slide {fig:digit}{4}
+\beamer@slide {fig:digit_PCs}{4}
+\beamer@slide {fig:plane}{4}
+\beamer@slide {fig:plane_PCs}{4}
+\beamer@slide {fig:digit}{4}
+\beamer@slide {SVD}{6}
+\beamer@slide {SVD_updata}{7}
+\beamer@slide {NMF}{8}
+\beamer@slide {NMF_update}{9}
+\beamer@slide {NMF+ADMM}{10}
+\beamer@slide {eq:NMF+ADMM_update}{11}
+\beamer@slide {eq:objective_function}{12}
+\beamer@slide {eq:objective_function}{14}
+\beamer@slide {eq:formula 1.13}{15}
+\beamer@slide {fig:mine_Digits}{17}
+\beamer@slide {fig:nmf_admm_Digits}{17}
+\beamer@slide {fig:nmf1_Digits}{17}
+\beamer@slide {fig:svd_Digits}{17}
+\beamer@slide {fig:Digits_of_all}{17}
+\beamer@slide {fig:mine_PlaneParts}{18}
+\beamer@slide {fig:nmf_admm_PlaneParts}{18}
+\beamer@slide {fig:nmf1_PlaneParts}{18}
+\beamer@slide {fig:svd_PlaneParts}{18}
+\beamer@slide {fig:PlaneParts_of_all}{18}

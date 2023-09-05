@@ -1,0 +1,264 @@
+\documentclass[cjk,a4paper,10pt]{beamer}
+\usepackage{CJK}
+\usepackage{color}
+\usepackage{epstopdf}
+\usetheme{Madrid}
+\renewcommand{\baselinestretch}{1.5}
+
+
+\begin{document} 
+
+\begin{CJK}{GBK}{song}     %CJK:支持中文
+\author[赵知临，胡琪滢，林坤昱]{\normalsize{赵知临\quad 胡琪滢\quad 林坤昱}}
+\title[带结构的主成分分析]{\Large 带结构的主成分分析}
+\institute[中山大学]
+{\small 中山大学数据科学与计算机学院\\
+中国科学院大学夏季学期课程011M7012H}
+
+\date[2016年7月13日]{\normalsize2016年7月13日}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\frametitle{目录}
+\small\tableofcontents
+\end{frame}
+\section{简介}
+\subsection{问题介绍}
+\begin{frame}
+\frametitle{问题介绍}
+\textbf{带结构的主成分分析}：主成分分析是找到给定数据的结构信息的主要手段之一。然而，对于某些特殊的输入数据传统的主成分分析, 并不能真正得到问题的主成分。这时我们在建模时就需要考虑到这些特殊的结构。请设计合适的主成分分析模型, 并提供相应算法, 使得当输入为下面两幅图左边信息时，可以返回右边的主成分元素。
+\end{frame}
+\begin{frame}
+\frametitle{问题介绍}
+\begin{figure}[h]
+\begin{center}
+{\includegraphics[width=0.36\linewidth]{figure/figure1.png}\label{fig:digit}}
+{\includegraphics[width=0.12\linewidth]{figure/figure1_PCs.png}\label{fig:digit_PCs}}\\
+\vskip -0.1in
+{\includegraphics[width=0.36\linewidth]{figure/figure2.png}\label{fig:plane}}
+{\includegraphics[width=0.12\linewidth]{figure/figure2_PCs.png}\label{fig:plane_PCs}}
+%\caption{图片内容及相应的主成分信息. }
+\label{fig:digit}
+\end{center}
+\end{figure}
+\end{frame}
+\subsection{数学分析}
+\begin{frame}
+\frametitle{数学分析}
+假设$V \in \mathbb{R}^{m \times n}$是一个描述两张图的高维度矩阵，$m$ 表示的是两张图中特征的数量，$n$是样本数量，这里的特征值是每一个像素点的灰度值，区间为$[0,1]$。 为了到寻找两张图的主成分分析，我们利用降维的算法找到$V$的低维度的基矩阵和系数矩阵。
+
+设$k$为基矩阵中基的数量，在实验过程中$k=8$，$U \in \mathbb{R}^{m\times k}$ 表示的是从高维空间映射到低维空间的基矩阵，$V \in \mathbb{R}^{k\times n}$ 表示的就是每一个样本对应每一个基矩阵的系数，我们将利用四个算法来寻找到最合适的$U$ 和$M$ 的值。
+\end{frame}
+
+\section{算法实现}
+\subsection{奇异值分解（SVD）}
+\begin{frame}
+\frametitle{奇异值分解（SVD）}
+利用奇异值分解法可以用两个较低维度的矩阵$U$和矩阵$M$的乘积来拟合已有的高纬度矩阵$X$。可以用一下目标函数进行表示：
+\begin{equation}\label{SVD}
+  \min_{U, M}  \sum\limits_{i=1}^m \sum\limits_{j=1}^n \frac{1}{2}I_{i,j}(V_{i,j}-U_{i,j}M_{i,j})^2+\lambda_u\sum\limits_{i=1}^m\|U_i\|^2_2+\lambda_m\sum\limits_{j=1}^n\|V_j\|^2_2
+\end{equation}
+其中$\lambda_u$、$\lambda_m$是回归系数，$\|.\|^2_2$是二范数，用来做函数的回归项。$I_{i,j}$是一个指示函数，如果$V_{i,j}$的值不为0，那么$I_{i,j}$的值为1，反之为0.
+\end{frame}
+\begin{frame}
+\frametitle{奇异值分解（SVD）}
+
+利用梯度下降法不断更新$U$和$V$的值，以得到目标函数值最小时的$U$和$M$的最优解：
+\begin{equation}\label{SVD_updata}
+\begin{aligned}
+  \nabla U_i & := -\frac{\partial E}{\partial U_i} = \sum\limits_{j=1}^m I_{i,j}((V_{i,j} - UM)M_j)-\lambda_uU_i, i = 1,...,n,\\
+  \nabla M_j & := -\frac{\partial E}{\partial M_j} := \sum\limits_{i=1}^n I_{i,j}((V_{i,j} - UM)U_i)-\lambda_mM_j, j = 1,...,m,\\
+           U & := U - \alpha \nabla U，\\
+           M & := M - \alpha \nabla M.
+\end{aligned}
+\end{equation}
+
+其中$\alpha$是学习率，控制每一次更新的程度。
+
+\end{frame}
+\subsection{非负矩阵分解（NMF）}
+\begin{frame}
+\frametitle{非负矩阵分解}
+SVD的最大缺点在于，它是对整体做了一个主成分分析，而没有考虑到数据是有内部结构的。因为原先的特征值是非负的，低维空间中的基矩阵和相应系数也应是非负的。
+
+基于此，我们使用了非负矩阵分解来进行建模，其最大的特性就是在计算过程中可以保证基矩阵和相应系数值一直非负：
+\begin{equation}\label{NMF}
+\begin{aligned}
+ & \min \ & & \|  V - UM \|_2^2,  \\
+ & \ s.t \ & & U \geq 0, V \geq 0.
+ \end{aligned}
+\end{equation}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{非负矩阵分解}
+不同于使用学习率控制的梯度下降法，NMF中使用的是如下的方式更新两个矩阵：
+\begin{equation}\label{NMF_update}
+\begin{aligned}
+  U_{i,\alpha} & := U_{i,\alpha} \frac{(VM^T)_{i,\alpha}}{(UMM^T)_{i,\alpha}},  \\
+  M_{\alpha,j} & := U_{i,\alpha} \frac{(U^TV)_{\alpha,j}}{(U^TUM)_{\alpha,j}},  \\
+ \end{aligned}
+\end{equation}
+这样的更新可以保证只要$U$，$M$的初始化值为非负，那么更新过后它们的值可以一直非负。
+\end{frame}
+
+\subsection{结合ADMM的非负矩阵分解}
+\begin{frame}
+\frametitle{结合ADMM的非负矩阵分解}
+除了一般的NMF，还可以使用交替方向乘子法（ADMM）来求非负的矩阵分解。ADMM 通过分解协调过程，将大的全局问题分解为多个较小、较容易求解的局部子问题，并通过协调子问题的解而得到大的全局问题的解。
+首先，使用划分将上述形式的目标函数转变为一下形式：
+\begin{equation}\label{NMF+ADMM}
+\begin{aligned}
+    & \min \ & & \frac{1}{2}\|  X - V \|_F^2 + I_+(U) + I_+(M) \\
+    & \ s.t \ & & X - UM = 0
+\end{aligned}
+\end{equation}
+其中$I_+$是标示非负矩阵的指示方程。
+\end{frame}
+
+\begin{frame}
+\frametitle{结合ADMM的非负矩阵分解}
+ADMM能分解原函数和扩增函数，以便于在更一般的假设条件下并行优化。其更新迭代过程如下：
+\begin{equation}\label{eq:NMF+ADMM_update}
+\begin{aligned}
+    (X^{k+1}, U^{k+1})  & :=  \mathop{\arg\min}_{X,U \geq 0}(\|X-V\|_F^2 + (\rho/2)\|X-UM^k+U^k\|_F^2)  \\
+    M^{k+1}             & :=  \mathop{\arg\min}_{M \leq 0}\|X^{k+1} - U^{k+1}M + W^k\|_F^2      \\
+    W^{k+1}             & :=  W^k + X^{k+1} - U^{k+1}M^{k+1}
+\end{aligned}
+\end{equation}
+\end{frame}
+\subsection{The Proposed Algorithm}
+\begin{frame}
+\frametitle{The Proposed Algorithm}
+考虑到最终的成像可以看做是在分别在四个向量中选一个向量，然后做加权和来得到每一个块的图像，我们可以将基矩阵和系数矩阵进行划分。令$F_1$为前4个基矩阵，$F_2$为后4个基矩阵，$G_1$，$G_2$是相应的前4 个和后四个系数矩阵。
+首先，可以写出如下目标函数：
+\begin{equation}\label{eq:objective_function}
+\begin{aligned}
+    & minimize\ & & E = \|X - F_1G_1^T - F_2G_2^T\|^2 \\
+    & subject\ to\ & & G_1G_1^T=I,\ G_2G_2^T=I,  \\
+    & &              & F_1\geq0,\ F_2\geq0,\ G_1\geq0,\ G_2\geq0
+\end{aligned}
+\end{equation}
+其次我们要介绍更新$F_1$和$F_2$的方法。通过目标方程对$F_1$的求导，可以得出：
+\begin{equation}
+\begin{aligned}
+    \frac{\partial E}{\partial (F_1)_{ij}} = [(X - F_1G_1^T - F_2G_2^T)G_1]_{ij}
+\end{aligned}
+\end{equation}
+\end{frame}
+
+\begin{frame}
+这样就可以来更新$F_1$：
+\begin{equation}
+\begin{aligned}
+    (F_1)_{ij} := (F_1)_{ij} + \eta_{ij}[(X - F_2G_2^T)G_1 - F_1G_1^TG_1]_{ij}
+\end{aligned}
+\end{equation}
+
+我们用如下形式来求出学习率$\eta$：
+\begin{equation}
+\begin{aligned}
+    \eta_{ij} = \frac{(F_1)_{ij}}{F_1G_1^TG_1}
+\end{aligned}
+\end{equation}
+
+从而对$F_1$的更新，可以写作如下形式：
+\begin{equation}
+\begin{aligned}
+    (F_1)_{ij} := (F_1)_{ij} \frac{(X-F_2G_2^T)G_1}{F_1G_1^TG_1}
+\end{aligned}
+\end{equation}
+\end{frame}
+
+\begin{frame}
+相似的，对于$F_2$我们也可以有相应的更新形式。
+对于$G_2$，其更新方式如下：
+\begin{equation}
+\begin{aligned}
+    (G_2)_{ij} := (G_2)_{ij} \sqrt{\frac{(X^TF_2 - G_1F_2^TF_1 - G_1F_1^TF_2)_{ij}}{[G_2(F_2^TF_2 + \lambda_2)]_{ij}}}
+\end{aligned}
+\end{equation}
+我们需要求解出 $\lambda_1$ and $\lambda_2$。根据下面的公式以及约束$G_1G_1^T=I$可以求出$\lambda_1$：
+\begin{equation}
+\begin{aligned}
+    \lambda_1 = G_1^T(XF_1 - G_2F_2^TF_1 - G_1F_1^TF_1) - F_1^TF_1
+\end{aligned}
+\end{equation}
+\end{frame}
+
+\begin{frame}
+替换更新$G_1$的公式中的$\lambda_1$，我们可以得到:
+\begin{equation}
+\begin{aligned}
+    (G_1)_{ij} := (G_1)_{ij} \sqrt{\frac{(X^TF_1 - G_2F_1^TF_2 - G_2F_2^TF_1)_{ij}}{[G_1G_1^T(X^TF_1 - G_2F_1^TF_2 - G_2F_2^TF_1)]_{ij}}}
+\end{aligned}
+\end{equation}
+相似的就可以得出$G_2$更新方程:
+\begin{equation}
+\begin{aligned}
+    (G_2)_{ij} := (G_2)_{ij} \sqrt{\frac{(X^TF_2 - G_1F_2^TF_1 - G_1F_1^TF_2)_{ij}}{[G_2G_2^T(X^TF_2 - G_1F_2^TF_1 - G_1F_1^TF_2)]_{ij}}}
+\end{aligned}
+\end{equation}
+\end{frame}
+
+\section{实验部分}
+\subsection{实验结果}
+\begin{frame}
+\frametitle{实验结果}
+数据1的主成分分析结果，下图顺序为：左上：我们提出的算法，右上：结合ADMM的NMF，左下：NMF，右下SVD。
+\begin{figure}[h]
+\begin{center}
+{\includegraphics[width=0.4\linewidth]{figure/mine_Digits.eps}\label{fig:mine_Digits}}
+{\includegraphics[width=0.4\linewidth]{figure/nmf_admm_Digits.eps}\label{fig:nmf_admm_Digits}}\\
+{\includegraphics[width=0.4\linewidth]{figure/nmf1_Digits.eps}\label{fig:nmf1_Digits}}
+{\includegraphics[width=0.4\linewidth]{figure/svd_Digits.eps}\label{fig:svd_Digits}}
+%\centering{\caption{ }}
+\label{fig:Digits_of_all}
+\end{center}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{实验结果}
+数据1的主成分分析结果，下图顺序为：左上：我们提出的算法，右上：结合ADMM的NMF，左下：NMF，右下SVD。
+\begin{figure}[h]
+\begin{center}
+{\includegraphics[width=0.4\linewidth]{figure/mine_PlaneParts.eps}\label{fig:mine_PlaneParts}}
+{\includegraphics[width=0.4\linewidth]{figure/nmf_admm_PlaneParts.eps}\label{fig:nmf_admm_PlaneParts}}\\
+{\includegraphics[width=0.4\linewidth]{figure/nmf1_PlaneParts.eps}\label{fig:nmf1_PlaneParts}}
+{\includegraphics[width=0.4\linewidth]{figure/svd_PlaneParts.eps}\label{fig:svd_PlaneParts}}
+\label{fig:PlaneParts_of_all}
+\end{center}
+\end{figure}
+\end{frame}
+\section{总结}
+\begin{frame}
+\frametitle{总结}
+针对这个带结构的主成分分析问题，我们小组尝试了上述四种方法，分别为NMF，SVD，NMF+ADMM，以及我们自己提出的一个新的算法，其中，前两种算法的效果比较一般，提取出来的主成分与标准答案相差较大，而后两种方法可以得到较好的实验结果，其中基于ADMM的NMF算法效果最好。
+\end{frame}
+
+\section{参考文献}
+\begin{frame}
+\frametitle{参考文献}
+
+\begin{thebibliography}{4}
+\bibitem{article1}\footnotesize\textcolor{black}{ Ma C C, Ma C C. A Guide to Singular Value Decomposition for Collaborative Filtering[J]}
+
+\bibitem{proceeding1}\footnotesize\textcolor{black}{ Ding C, Li T, Jordan M I. Nonnegative Matrix Factorization for Combinatorial Optimization: Spectral Clustering, Graph Matching, and Clique Finding[C], In: Proceedings of the 8th {IEEE} International Conference on Data Mining {(ICDM}, pp. 183-192, Pisa, (2008)}
+\bibitem{article1}\footnotesize\textcolor{black}{Lee D D. Algorithms for Non-negative Matrix Factorization[J], Advances in Neural Information Processing Systems, vol. 13(6), pp. 556--562, (2001)}
+
+\bibitem{article3} \footnotesize\textcolor{black}{ Boyd S, Parikh N, Chu E, et al. Distributed Optimization and Statistical Learning via the Alternating Direction Method of Multipliers[J], In: Foundations and Trends in Machine Learning, vol. 3(1), pp. 1--122, (2011)}
+
+\bibitem{article4}\footnotesize\textcolor{black}{ Chen M, Lin Z, Ma Y, et al. The Augmented Lagrange Multiplier Method for Exact Recovery of Corrupted Low-Rank Matrices[J], In: Eprint Arxiv, 9, (2009)}
+
+\bibitem{proceeding2} \footnotesize\textcolor{black}{Ding C, Li T, Peng W, et al. Orthogonal nonnegative matrix t-factorizations for clustering[C], In: Proceedings of the Twelfth {ACM} {SIGKDD} International Conference on Knowledge Discovery and Data Mining, pp. 126--135, Philadelphia (2006)}
+
+
+\end{thebibliography}
+\end{frame}
+\end{CJK}
+\end{document}
